@@ -18,11 +18,37 @@ public class Lexer {
     }
 
     Token scan() throws IOException {
+        //skip the blank and comments
         for( ; ; peek = (char)System.in.read()){
             if(peek == ' ' || peek =='\t') continue;
+            else if(peek =='/'){
+                peek = (char)System.in.read();
+                //single line comments
+                if(peek == '/'){
+                    do { peek = (char)System.in.read(); } while(peek !='\n');
+                    if(peek == '\n') line = line + 1;
+                }
+                //multi-line comments
+                else if(peek == '*'){
+                    do{
+                        peek = (char)System.in.read();
+                        if(peek == '\n') line = line + 1;
+                        else if(peek == '*') {
+                            peek = (char)System.in.read();
+                            if(peek == '/') break;
+                        }
+                    } while(true);
+                }
+                //not comments, return '/'
+                else {
+                    Token t = new Token('/');
+                    return t;
+                }
+            }
             else if(peek == '\n') line = line + 1;
             else break;
         }
+
         if(Character.isDigit(peek) ){
             int v = 0;
             do{
