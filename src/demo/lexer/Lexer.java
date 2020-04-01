@@ -1,40 +1,62 @@
 package demo.lexer;
 
+import demo.symbols.Type;
+
 import java.io.*;
 import java.util.Hashtable;
 
 public class Lexer {
-    public int line = 1 ;
+    public static int line = 1 ;
     private char peek = ' ';
     private Hashtable words = new Hashtable();
 
-    void reserve(Word t){
+    private void reserve(Word t){
         words.put(t.lexeme, t);
     }
 
     public Lexer(){
-        reserve(new Word(Tag.TRUE, "true"));
-        reserve(new Word(Tag.FALSE, "false"));
+        reserve(new Word("true", Tag.TRUE));
+        reserve(new Word("false", Tag.FALSE));
+        reserve(new Word("if", Tag.IF));
+        reserve(new Word("else",Tag.IF));
+        reserve(new Word("break",Tag.BREAK));
+        reserve(new Word("while",Tag.WHILE));
+        reserve(new Word("do",Tag.DO));
+        reserve(Type.Char);
+        reserve(Type.Int);
+        reserve(Type.Bool);
+        reserve(Type.Float);
     }
 
-    Token scan() throws IOException {
+    private void readch() throws IOException {
+        peek = (char)System.in.read();
+    }
+
+    private boolean readch(char c) throws IOException {
+        readch();
+        if(peek != c) return false;
+        peek = ' ';
+        return true;
+    }
+
+    public Token scan() throws IOException {
         //skip the blank and comments
-        for( ; ; peek = (char)System.in.read()){
+        for( ; ; readch()){
             if(peek == ' ' || peek =='\t') continue;
             else if(peek =='/'){
-                peek = (char)System.in.read();
+                readch();
                 //single line comments
                 if(peek == '/'){
-                    do { peek = (char)System.in.read(); } while(peek !='\n');
+                    do { readch(); } while(peek !='\n');
                     if(peek == '\n') line = line + 1;
                 }
                 //multi-line comments
                 else if(peek == '*'){
                     do{
-                        peek = (char)System.in.read();
+                        readch();
                         if(peek == '\n') line = line + 1;
                         else if(peek == '*') {
-                            peek = (char)System.in.read();
+                            readch();
                             if(peek == '/') break;
                         }
                     } while(true);
@@ -48,27 +70,51 @@ public class Lexer {
             else if(peek == '\n') line = line + 1;
             else break;
         }
+        //multi-character op
+        switch (peek){
+            case '&':
+                if(readch('&')) return Word.and; else return new Token('&');
+            case '|':
+                if(readch('|')) return Word.or; else return new Token('|');
+            case '=':
+                if(readch('=')) return Word.eq; else return new Token('=');
+            case '!':
+                if(readch('=')) return Word.ne; else return new Token('!');
+            case '<':
+                if(readch('=')) return Word.le; else return new Token('<');
+            case '>':
+                if(readch('=')) return Word.ge; else return new Token('>');
+        }
 
+        //num (include real)
         if(Character.isDigit(peek) ){
             int v = 0;
             do{
                 v = 10*v + Character.digit(peek,10);
-                peek =(char)System.in.read();
+                readch();
             } while(Character.isDigit(peek));
-            return new Num(v);
+            if(peek != '.') return new Num(v);
+            float x = v, d = 10;
+            for(;;){
+                readch();
+                if(!Character.isDigit(peek)) break;
+                x = x + Character.digit(peek, 10) / d;
+                d = d * 10;
+            }
+            return new Real(x);
         }
         if(Character.isLetter(peek)){
             StringBuffer b = new StringBuffer();
             do{
                 b.append(peek);
-                peek = (char) System.in.read();
+                readch();
             } while(Character.isLetterOrDigit(peek));
             String s = b.toString();
             //check if s is of reserved words.
             Word w = (Word)words.get(s);
             if(w != null) return w;
             //now s is an ID.
-            w =new Word(Tag.ID, s);
+            w =new Word(s, Tag.ID);
             words.put(s, w);
             return w;
         }
