@@ -22,7 +22,6 @@ public class Expr extends Node{
     }
 
     //for bool expr and jumping expr
-
     public void jumping(int t, int f){
         emitjumps(toString(), t, f);
     }
@@ -32,7 +31,7 @@ public class Expr extends Node{
             emit("goto L" + f);
         }
         else if(t != 0) emit("if " + test + " goto L"  + t);
-        else if(f != 0) emit("iffalse " + test + " goto L" + f);
+        else if(f != 0) emit("ifFalse " + test + " goto L" + f);
         else ;
     }
     public String toString(){

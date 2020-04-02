@@ -26,12 +26,15 @@ public class Type extends Word {
         else if(p1 == Type.Int || p2 == Type.Int) return Type.Int;
         else return Type.Char;
     }
+
     public static Type bool_check(Type p1, Type p2){
         if(p1 == Type.Bool && p2 == Type.Bool) {
             return Type.Bool;
         }
         else return null;
     }
+
+   // p1 : 关系运算符左部　p2 : 关系运算符右部
     public static Type rel_check(Type p1, Type p2){
         if(p1 instanceof Array || p2 instanceof Array){
             return null;
@@ -42,5 +45,25 @@ public class Type extends Word {
         else return null;
     }
 
+    //　p1 :赋值表达式左部类型　　p2　：赋值表达式右部类型
+    public static Type assign_check(Type p1, Type p2){
+        if(numeric(p1) && numeric(p2)) return p2;
+        else if(p1 == Type.Bool && p2 == Type.Bool) return p2;
+        else return null;
+    }
+
+    //p1 : 数组类型　p2: 将赋值的元素类型
+    public static Type setElem_check(Type p1, Type p2){
+        if(p1 instanceof Array || p2 instanceof Array){
+            return null;
+        }
+        else if(p1 == p2){
+            return p2;
+        }
+        else if(numeric(p1) && numeric(p2)){
+            return p2;
+        }
+        else return null;
+    }
 }
 

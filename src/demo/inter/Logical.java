@@ -13,7 +13,17 @@ public class Logical extends Expr {
         if(type == null) error("type error");
     }
 
-    //return bool value
+    //return the bool value of the logical expr
+    /*
+        ...
+        ifFlase test goto f
+        temp = true
+        goto La
+        f:
+        temp = false
+        a:
+        ...
+     */
     public Expr gen(){
         int f = newlabel();
         int a = newlabel();
