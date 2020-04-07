@@ -10,12 +10,10 @@ import java.io.IOException;
     //e表示空字
     program -> block
     block -> {decls stmts}
-    decls -> type ID
-    type -> basic
-            | basic [NUM]
+    decls -> type ID1,ID2... | type ID1[NUM],ID2[NUM]...
     stmts -> stmt stmts
              |e
-    stmt -> loc
+    stmt -> ...
  */
 
 public class Parser {
@@ -57,25 +55,28 @@ public class Parser {
         return s;
     }
 
-    //decls -> type ID
+    //decls -> type ID1,ID2... | type ID1[],ID2[]...
     void decls() throws IOException{
         while(look.tag == Tag.BASIC){
-            Type p = type();
-            Token tok = look;
-            match(Tag.ID);
+            Type basic_t = (Type)look;
+            match(Tag.BASIC);
+            do{
+                if(look.tag == ',') match(',');
+                //获取标识符
+                Token id_w = look;
+                match(Tag.ID);
+                //确定类型
+                Type p = basic_t;
+                if(look.tag == '[') {
+                    p = dims(basic_t);
+                }
+                //加入符号表
+                Id id = new Id((Word)id_w, p, used);
+                Env.top.put(id_w, id);
+                used = used + p.width;
+            } while(look.tag == ',');
             match(';');
-            Id id = new Id((Word)tok, p, used);
-            Env.top.put(tok, id);
-            used = used + p.width;
         }
-    }
-
-    //type -> BASIC | BASIC[]
-    Type type() throws IOException{
-        Type p =(Type) look;
-        match(Tag.BASIC);
-        if(look.tag != '[') return p;
-        else return dims(p);
     }
 
     Type dims(Type p) throws IOException{
