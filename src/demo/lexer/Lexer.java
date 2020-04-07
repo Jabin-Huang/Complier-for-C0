@@ -9,12 +9,12 @@ public class Lexer {
     public static int line = 1 ;
     private char peek = ' ';
     private Hashtable words = new Hashtable();
-
+    private InputStream in;
     private void reserve(Word t){
         words.put(t.lexeme, t);
     }
 
-    public Lexer(){
+    public Lexer(InputStream f){
         reserve(new Word("true", Tag.TRUE));
         reserve(new Word("false", Tag.FALSE));
         reserve(new Word("if", Tag.IF));
@@ -26,10 +26,11 @@ public class Lexer {
         reserve(Type.Int);
         reserve(Type.Bool);
         reserve(Type.Float);
+        in = f;
     }
 
     private void readch() throws IOException {
-        peek = (char)System.in.read();
+        peek = (char)in.read();
     }
 
     private boolean readch(char c) throws IOException {
@@ -42,7 +43,7 @@ public class Lexer {
     public Token scan() throws IOException {
         //skip the blank and comments
         for( ; ; readch()){
-            if(peek == ' ' || peek =='\t') continue;
+            if(peek == ' ' || peek =='\t' || peek == '\r') continue;
             else if(peek =='/'){
                 readch();
                 //single line comments

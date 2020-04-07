@@ -1,9 +1,9 @@
 package demo.parser;
 import java.io.*;
-class Parser {
+class PostfixParser {
     static  int lookahead;
 
-    public Parser() throws  IOException{
+    public PostfixParser() throws  IOException{
         lookahead = System.in.read();
     }
 
@@ -35,7 +35,7 @@ class Parser {
 
 public class Postfix{
     public static void main(String[] args) throws IOException{
-        Parser parse = new Parser();
+        PostfixParser parse = new PostfixParser();
         parse.expr();
         System.out.write('\n');
     }
