@@ -5,6 +5,7 @@ import demo.lexer.*;
 import demo.symbols.*;
 
 import java.io.IOException;
+import java.io.OutputStream;
 
 /*
     //e表示空字
@@ -19,18 +20,18 @@ import java.io.IOException;
 public class Parser {
     private Lexer lex;
     private Token look; //向前看词法单元
-    int used = 0; //用于变量声明的存储位置
+    private int used = 0; //用于变量声明的存储位置
     public Parser(Lexer l) throws IOException {
         lex = l;
         move();
     }
-    void move() throws IOException {
+    private void move() throws IOException {
         look = lex.scan();
     }
-    void error(String s){
-        throw new Error("near line " + lex.line + ": " + s);
+    private void error(String s){
+        throw new Error("near line " + Lexer.line + ": " + s);
     }
-    void match(int t) throws IOException {
+    private void match(int t) throws IOException {
         if(look.tag == t) move();
         else error("syntax error");
     }
@@ -44,7 +45,7 @@ public class Parser {
         s.emitlabel(after);
     }
     //block -> {decls stmts}
-    Stmt block() throws IOException{
+    private Stmt block() throws IOException{
         match('{');
         Env savedEnv = Env.top;
         Env.top = new Env(Env.top);
@@ -56,7 +57,7 @@ public class Parser {
     }
 
     //decls -> type ID1,ID2... | type ID1[],ID2[]...
-    void decls() throws IOException{
+    private void decls() throws IOException{
         while(look.tag == Tag.BASIC){
             Type basic_t = (Type)look;
             match(Tag.BASIC);
@@ -79,7 +80,7 @@ public class Parser {
         }
     }
 
-    Type dims(Type p) throws IOException{
+    private Type dims(Type p) throws IOException{
         //[NUM] | [NUM][..][..]...
         match('[');
         Token tok = look;
@@ -91,12 +92,12 @@ public class Parser {
     }
 
     //stmts -> stmt stmts | e
-    Stmt stmts() throws IOException{
+    private Stmt stmts() throws IOException{
         if(look.tag == '}') return Stmt.Null;
         else return new Seq(stmt(), stmts());
     }
 
-    Stmt stmt() throws IOException{
+    private Stmt stmt() throws IOException{
         Expr x;
         Stmt s, s1, s2;
         Stmt savedStmt; //为break保存外层循环
@@ -155,7 +156,7 @@ public class Parser {
 
     }
 
-    Stmt assign() throws IOException{
+    private Stmt assign() throws IOException{
         Stmt stmt;
         Token t = look;
         match(Tag.ID);
@@ -175,7 +176,7 @@ public class Parser {
         return stmt;
     }
 
-    Expr bool() throws IOException{
+    private Expr bool() throws IOException{
         Expr x = join();
         while(look.tag == Tag.OR){
             Token tok = look;
@@ -185,7 +186,7 @@ public class Parser {
         return x;
     }
 
-    Expr join() throws IOException{
+    private Expr join() throws IOException{
         Expr x = equality();
         while(look.tag == Tag.AND){
             Token tok = look;
@@ -194,7 +195,7 @@ public class Parser {
         }
         return x;
     }
-    Expr equality() throws IOException{
+    private Expr equality() throws IOException{
         Expr x = rel();
         while(look.tag == Tag.EQ || look.tag == Tag.NE){
             Token tok = look;
@@ -204,7 +205,7 @@ public class Parser {
         return x;
     }
 
-    Expr rel() throws IOException{
+    private Expr rel() throws IOException{
         Expr x = expr();
         switch (look.tag){
             case '<':
@@ -219,7 +220,7 @@ public class Parser {
         }
     }
 
-    Expr expr() throws IOException{
+    private Expr expr() throws IOException{
         Expr x = term();
         while(look.tag == '+' || look.tag == '-'){
             Token tok = look;
@@ -229,7 +230,7 @@ public class Parser {
         return x;
     }
 
-    Expr term() throws IOException{
+    private Expr term() throws IOException{
         Expr x = unary();
         while(look.tag == '*' || look.tag == '/'){
             Token tok = look;
@@ -239,7 +240,7 @@ public class Parser {
         return x;
     }
 
-    Expr unary() throws IOException{
+    private Expr unary() throws IOException{
         if(look.tag == '-'){
             move();
             return new Unary(Word.minus, unary());
@@ -252,7 +253,7 @@ public class Parser {
         else return factor();
     }
 
-    Expr factor() throws IOException{
+    private Expr factor() throws IOException{
         Expr x = null;
         switch (look.tag){
             case '(':
@@ -292,7 +293,7 @@ public class Parser {
         }
     }
 
-    Access offset(Id a) throws IOException{
+    private Access offset(Id a) throws IOException{
         Expr i, w, t1, t2, loc;
         Type type = a.type;
         match('[');
@@ -314,13 +315,5 @@ public class Parser {
         }
         return new Access(a, loc, type);
     }
-
-
-
-
-
-
-
-
 
 }

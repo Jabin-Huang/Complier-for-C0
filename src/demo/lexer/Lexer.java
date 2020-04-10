@@ -14,7 +14,9 @@ public class Lexer {
         words.put(t.lexeme, t);
     }
 
-    public Lexer(InputStream f){
+    public Lexer(InputStream input){
+        line = 1;
+        in = input;
         reserve(new Word("true", Tag.TRUE));
         reserve(new Word("false", Tag.FALSE));
         reserve(new Word("if", Tag.IF));
@@ -26,7 +28,6 @@ public class Lexer {
         reserve(Type.Int);
         reserve(Type.Bool);
         reserve(Type.Float);
-        in = f;
     }
 
     private void readch() throws IOException {
