@@ -1,0 +1,55 @@
+/*
+    //e表示空字
+    program -> process program | e
+    process -> type id(parameter) block
+    parameter -> type id ids | e
+    ids -> , type id ids | e
+    block -> {decls stmts}
+
+    decls -> decl decls | e　
+    decl -> type ID IDs ;
+    type -> BASIC
+    IDs  -> ,ID IDs | e
+    ID -> id | id dims
+    dims -> [NUM] dims | e
+
+
+    stmts -> stmt stmts　|e
+    stmt ->  loc = bool;
+           | if (bool) stmt
+           | if (bool) stmt else stmt
+           | while (bool) stmt
+           | do stmt while(bool);
+           | break;
+           | block
+    loc -> id | id offset
+    offset -> [NUM] offset | e
+
+    bool -> join || bool
+          | join
+    join -> equality && join
+          | equality
+    equality ->  rel == equality
+               | rel != equality
+               | rel
+    rel -> expr < expr
+         | expr <= expr
+         | expr >= expr
+         | expr > expr
+         | expr
+    expr -> term + expr
+          | term - expr
+          | term
+    term -> unary * term
+          | unary / term
+          | unary
+    unary -> !unary
+           | -unary
+           | factor
+    factor -> (bool)
+             | loc
+             | NUM
+             | REAL
+             | TRUE
+             | FALSE
+ */

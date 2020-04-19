@@ -14,4 +14,8 @@ public class Array extends Type{
     public String toString(){
         return "[" + size + "]" + of.toString();
     }
+
+    public String AST_str(){
+        return String.format("Array(%s, %s)", size , of);
+    }
 }

@@ -1,8 +1,11 @@
-package demo.inter;
+package demo.inter.stmt;
 
+import demo.inter.expr.Expr;
 import demo.symbols.Type;
 
-public class While extends Stmt{
+import java.nio.Buffer;
+
+public class While extends Stmt {
     Expr expr;
     Stmt stmt;
     public While(){
@@ -13,9 +16,10 @@ public class While extends Stmt{
         expr = x;
         stmt = s;
         if(expr.type != Type.Bool){
-            expr.error("boolean required in while");
+            error("boolean required in while");
         }
     }
+
 
     /*
             b: ifFalse expr goto a
@@ -31,5 +35,19 @@ public class While extends Stmt{
         emitlabel(label);
         stmt.gen(label, b);
         emit("goto L" + b);
+    }
+
+    public String AST_str(int col){
+        String AST_child = expr.AST_str(col + 1) +
+                ",\n"+
+                stmt.AST_str(col + 1);
+
+        return "\t".repeat(Math.max(0, col)) +
+                "While(" +
+                '\n' +
+                AST_child +
+                '\n' +
+                "\t".repeat(Math.max(0, col)) +
+                ')';
     }
 }

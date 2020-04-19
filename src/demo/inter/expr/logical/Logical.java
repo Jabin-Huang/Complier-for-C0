@@ -1,5 +1,7 @@
-package demo.inter;
+package demo.inter.expr.logical;
 
+import demo.inter.expr.Expr;
+import demo.inter.expr.Temp;
 import demo.lexer.Token;
 import demo.symbols.Type;
 

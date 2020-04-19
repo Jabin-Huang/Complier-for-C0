@@ -1,13 +1,14 @@
 {
-    int i;int j; float v; float x; float a[100];
+    int i, j;
+    float val, temp, a[100];
     while(true){
         do i = i + 1;
-        while(a[i] < v);
+        while(a[i] < val);
         do j = j - 1;
-        while(a[j] > v);
+        while(a[j] > val);
         if(i >= j) break;
-        x = a[i];
+        temp = a[i];
         a[i] = a[j];
-        a[j] = x;
+        a[j] = temp;
     }
 }

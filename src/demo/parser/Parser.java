@@ -1,21 +1,22 @@
 package demo.parser;
 
-import demo.inter.*;
+import com.google.gson.Gson;
+import demo.inter.expr.Constant;
+import demo.inter.expr.Expr;
+import demo.inter.expr.Id;
+import demo.inter.expr.logical.And;
+import demo.inter.expr.logical.Not;
+import demo.inter.expr.logical.Or;
+import demo.inter.expr.logical.Rel;
+import demo.inter.expr.op.Access;
+import demo.inter.expr.op.Arith;
+import demo.inter.expr.op.Unary;
+import demo.inter.stmt.*;
 import demo.lexer.*;
 import demo.symbols.*;
 
 import java.io.IOException;
-import java.io.OutputStream;
 
-/*
-    //e表示空字
-    program -> block
-    block -> {decls stmts}
-    decls -> type ID1,ID2... | type ID1[NUM],ID2[NUM]...
-    stmts -> stmt stmts
-             |e
-    stmt -> ...
- */
 
 public class Parser {
     private Lexer lex;
@@ -33,55 +34,95 @@ public class Parser {
     }
     private void match(int t) throws IOException {
         if(look.tag == t) move();
-        else error("syntax error");
+        else {
+            String expect = (t > 255) ? Tag.tagToString.get(t) : ""+(char) t;
+            error("syntax error: expected "+ expect +"but found " + look.toString() );
+        }
     }
-    //program -> block
-    public void program() throws IOException{
+
+
+    //program -> process program | e
+    public void progarm() throws IOException {
+        Env.top = new Env(Env.top);
+       // while (look.tag == Tag.BASIC){
+            process();
+       // }
+    }
+
+    //process -> type id (parameter) block
+    private void process() throws IOException{
+//        Type fun_t = (Type) look;
+//        match(Tag.BASIC);
+//        Word fun_w = (Word) look;
+//        match(Tag.ID);
+//        /*
+//            TODO
+//         */
+//        match('(');
+//        // parameter -> type id ids | e
+//        // ids -> , type id ids | e
+//        do{
+//            if(look.tag == ',') match(',');
+//            Type pt_word = (Type) look;
+//            match(Tag.BASIC);
+//            Word id_word = (Word) look;
+//            match(Tag.ID);
+//            /*
+//                TODO
+//             */
+//        }while(look.tag == ',');
+//        match(')');
+
         Stmt s = block();
+        System.out.print(s.AST_str(0));
         int begin = s.newlabel();
         int after = s.newlabel();
         s.emitlabel(begin);
         s.gen(begin, after);
         s.emitlabel(after);
     }
+
+
+
     //block -> {decls stmts}
     private Stmt block() throws IOException{
         match('{');
-        Env savedEnv = Env.top;
+        Env.push(Env.top);
         Env.top = new Env(Env.top);
         decls();
         Stmt s = stmts();
         match('}');
-        Env.top = savedEnv;
+        Env.top = Env.pop();
         return s;
     }
 
-    //decls -> type ID1,ID2... | type ID1[],ID2[]...
+    //decls -> decl decls | e
     private void decls() throws IOException{
         while(look.tag == Tag.BASIC){
+            //decl -> type ID IDs;
             Type basic_t = (Type)look;
             match(Tag.BASIC);
+            //IDs -> ,ID IDs | e
             do{
                 if(look.tag == ',') match(',');
-                //获取标识符
-                Token id_w = look;
+                Word id_word = (Word) look;
+                // ID -> id | id dims
                 match(Tag.ID);
-                //确定类型
                 Type p = basic_t;
                 if(look.tag == '[') {
                     p = dims(basic_t);
                 }
                 //加入符号表
-                Id id = new Id((Word)id_w, p, used);
-                Env.top.put(id_w, id);
+                Id id = new Id(id_word, p, used);
+                Env.top.put(id_word, id);
                 used = used + p.width;
             } while(look.tag == ',');
             match(';');
         }
     }
 
+    //dims -> [NUM] dims | e
     private Type dims(Type p) throws IOException{
-        //[NUM] | [NUM][..][..]...
         match('[');
         Token tok = look;
         match(Tag.NUM);
@@ -93,8 +134,12 @@ public class Parser {
 
     //stmts -> stmt stmts | e
     private Stmt stmts() throws IOException{
-        if(look.tag == '}') return Stmt.Null;
-        else return new Seq(stmt(), stmts());
+        if(look.tag == '}'){
+            return Stmt.Null;
+        }
+        else{
+            return new Seq(stmt(), stmts());
+        }
     }
 
     private Stmt stmt() throws IOException{
@@ -115,10 +160,12 @@ public class Parser {
                 if(look.tag != Tag.ELSE){
                     return new If(x, s1);
                 }
+                //stmt -> if (bool) stmt else stmt
                 match(Tag.ELSE);
                 s2 = stmt();
                 return new If_else(x, s1, s2);
             case Tag.WHILE:
+                //stmt -> while (bool) stmt
                 While whilenode = new While();
                 savedStmt = Stmt.Enclosing;
                 Stmt.Enclosing = whilenode;
@@ -131,6 +178,7 @@ public class Parser {
                 Stmt.Enclosing = savedStmt;
                 return whilenode;
             case Tag.DO:
+                //stmt -> do stmt while(bool);
                 Do_while donode = new Do_while();
                 savedStmt = Stmt.Enclosing;
                 Stmt.Enclosing = donode;
@@ -145,29 +193,34 @@ public class Parser {
                 Stmt.Enclosing = savedStmt;
                 return donode;
             case Tag.BREAK:
+                // stmt -> break;
                 match(Tag.BREAK);
                 match(';');
                 return new Break();
             case '{':
+                // stmt -> block
                 return block();
             default:
+                // stmt -> loc = bool
                 return assign();
         }
 
     }
 
+    //stmt ->  loc = bool;
     private Stmt assign() throws IOException{
         Stmt stmt;
-        Token t = look;
+        Word id_word = (Word) look;
         match(Tag.ID);
-        Id id = Env.top.get(t);
-        if(id == null) error(t.toString() + " undeclared");
-        // id = E
+        Id id = Env.top.get(id_word);
+        if(id == null) error(id_word.toString() + " undeclared");
+
+        //loc -> id
         if(look.tag == '='){
             move();
             stmt = new Assign(id, bool());
         }else{
-            //[] = E
+        //loc -> id offset
             Access x = offset(id);
             match('=');
             stmt = new SetElem(x, bool());
@@ -176,6 +229,10 @@ public class Parser {
         return stmt;
     }
 
+    /*
+       bool -> join || bool
+             | join
+     */
     private Expr bool() throws IOException{
         Expr x = join();
         while(look.tag == Tag.OR){
@@ -186,6 +243,10 @@ public class Parser {
         return x;
     }
 
+    /*
+        join -> equality && join
+              | equality
+     */
     private Expr join() throws IOException{
         Expr x = equality();
         while(look.tag == Tag.AND){
@@ -195,6 +256,12 @@ public class Parser {
         }
         return x;
     }
+
+    /*
+        equality ->  rel == equality
+                   | rel != equality
+                   | rel
+     */
     private Expr equality() throws IOException{
         Expr x = rel();
         while(look.tag == Tag.EQ || look.tag == Tag.NE){
@@ -205,6 +272,13 @@ public class Parser {
         return x;
     }
 
+    /*
+        rel -> expr < expr
+             | expr <= expr
+             | expr >= expr
+             | expr > expr
+             | expr
+     */
     private Expr rel() throws IOException{
         Expr x = expr();
         switch (look.tag){
@@ -220,6 +294,11 @@ public class Parser {
         }
     }
 
+    /*
+        expr -> term + expr
+              | term - expr
+              | term
+     */
     private Expr expr() throws IOException{
         Expr x = term();
         while(look.tag == '+' || look.tag == '-'){
@@ -230,6 +309,11 @@ public class Parser {
         return x;
     }
 
+    /*
+        term -> unary * term
+              | unary / term
+              | unary
+     */
     private Expr term() throws IOException{
         Expr x = unary();
         while(look.tag == '*' || look.tag == '/'){
@@ -240,6 +324,11 @@ public class Parser {
         return x;
     }
 
+    /*
+        unary -> !unary
+               | -unary
+               | factor
+     */
     private Expr unary() throws IOException{
         if(look.tag == '-'){
             move();
@@ -253,6 +342,14 @@ public class Parser {
         else return factor();
     }
 
+    /*
+     factor -> (bool)
+             | loc
+             | NUM
+             | REAL
+             | TRUE
+             | FALSE
+     */
     private Expr factor() throws IOException{
         Expr x = null;
         switch (look.tag){
@@ -278,10 +375,9 @@ public class Parser {
                 move();
                 return x;
             case Tag.ID:
-                String s = look.toString();
                 Id id = Env.top.get(look);
                 if(id == null){
-                    error(look.toString() + "undeclared");
+                    error(look.toString() + " undeclared");
                 }
                 move();
                 if(look.tag != '[') return id;
@@ -289,7 +385,6 @@ public class Parser {
             default:
                 error("syntax error");
                 return x;
-
         }
     }
 

@@ -1,4 +1,4 @@
-package demo.inter;
+package demo.inter.expr;
 
 import demo.lexer.Num;
 import demo.lexer.Token;
@@ -6,7 +6,7 @@ import demo.lexer.Word;
 import demo.symbols.Type;
 
 
-public class Constant extends Expr{
+public class Constant extends Expr {
     public Constant(Token tok, Type p){
         super(tok, p);
     }
@@ -24,5 +24,9 @@ public class Constant extends Expr{
         else if(this == False && f != 0){
             emit("goto L" + f);
         }
+    }
+    public String AST_str(int col){
+        return "\t".repeat(Math.max(0, col)) +
+                "Constant(" + op.toString() + ',' + type.toString()+ ')';
     }
 }

@@ -1,5 +1,6 @@
-package demo.inter;
+package demo.inter.stmt;
 
+import demo.inter.expr.Expr;
 import demo.symbols.Type;
 
 public class Do_while extends Stmt {
@@ -13,7 +14,7 @@ public class Do_while extends Stmt {
         expr = x;
         stmt = s;
         if(expr.type != Type.Bool){
-            expr.error("boolean required in do-while");
+            error("boolean required in do-while");
         }
     }
     /*
@@ -26,5 +27,19 @@ public class Do_while extends Stmt {
         stmt.gen(b, label);
         emitlabel(label);
         expr.jumping(b, 0);
+    }
+
+    public String AST_str(int col){
+        int newCol = col + 1;
+        String AST_child = expr.AST_str(col + 1) +
+                ",\n"+
+                stmt.AST_str(col + 1);
+        return "\t".repeat(Math.max(0, col)) +
+                "Do_while(" +
+                '\n' +
+                AST_child +
+                '\n' +
+                "\t".repeat(Math.max(0, col)) +
+                ')';
     }
 }

@@ -1,13 +1,18 @@
-package demo.inter;
+package demo.inter.stmt;
 
+import demo.inter.expr.Expr;
+import demo.inter.expr.op.Access;
+import demo.inter.expr.Id;
 import demo.symbols.Array;
 import demo.symbols.Type;
 
 public class SetElem extends Stmt {
     public Id array;
     public Expr index;
+    public Access access;
     public Expr expr;
     public SetElem(Access x, Expr y){
+        access = x;
         array = x.array;
         index = x.index;
         expr = y;
@@ -35,4 +40,17 @@ public class SetElem extends Stmt {
         String s2 = expr.reduce().toString();
         emit(array.toString() + "[" + s1 + "] = " + s2 );
     }
+    public String AST_str(int col){
+        String AST_child = access.AST_str(col + 1) +
+                ",\n"+
+                expr.AST_str(col + 1);
+        return "\t".repeat(Math.max(0, col)) +
+                "SetElem(" +
+                '\n' +
+                AST_child +
+                '\n' +
+                "\t".repeat(Math.max(0, col)) +
+                ')';
+    }
+
 }

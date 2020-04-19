@@ -8,8 +8,9 @@ import java.util.Hashtable;
 public class Lexer {
     public static int line = 1 ;
     private char peek = ' ';
-    private Hashtable words = new Hashtable();
+    private Hashtable<String, Word> words = new Hashtable<>();
     private InputStream in;
+
     private void reserve(Word t){
         words.put(t.lexeme, t);
     }
@@ -28,6 +29,7 @@ public class Lexer {
         reserve(Type.Int);
         reserve(Type.Bool);
         reserve(Type.Float);
+        Tag.init();
     }
 
     private void readch() throws IOException {
