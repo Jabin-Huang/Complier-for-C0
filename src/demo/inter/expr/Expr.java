@@ -11,12 +11,15 @@ public class Expr extends Node {
         op = tok;
         type = p;
     }
+    Expr(){}
+
+    public static Expr Null = new Expr();
 
     //对非叶子结点x，将其各个运算分量通过reduce（）规约成temp，返回分量规约后的新结点x
     //若是常量、标识符、temp 则返回自身， 带有运算符的其他表达式在子类按需重写
-    public Expr gen(){
-        return this;
-    }
+    //public Expr gen(){
+    //    return this;
+    //}
 
     //返回非叶子结点归约后的结果，其用一个地址temp表示
     //若是常量、标识符、temp 则返回自身， 带有运算符的其他表达式在op类重写，返回一个 temp
@@ -37,9 +40,10 @@ public class Expr extends Node {
         else if(f != 0) emit("ifFalse " + test + " goto L" + f);
         else ;
     }
-    //常量、标识符、temp 返回自身的词素， 其他表达式按需重写
+
+    //在子类重写
     public String toString(){
-        return op.toString();
+         return op.toString();
     }
 
     //在子类重写

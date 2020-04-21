@@ -14,15 +14,15 @@ public class Access extends Op {
         array = a;
         index = i;
     }
-    public Expr gen(){
-        return new Access(array, index.reduce(), type);
-    }
+//    public Expr gen(){
+//        return new Access(array, index.reduce(), type);
+//    }
     //数组里保存了布尔值
     public void jumping(int t, int f){
         emitjumps(reduce().toString(), t, f);
     }
     public String toString(){
-        return array.toString() + "[" + index.toString() + "]";
+        return array.toString() + "[" + index.reduce().toString() + "]";
     }
 
     public String AST_str(int col){

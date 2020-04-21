@@ -12,8 +12,9 @@ public class Seq extends Stmt {
         label:  stmt2
      */
     public void gen(int b, int a){
-        if(stmt1 == Stmt.Null) stmt2.gen(b, a);
-        else if(stmt2 == Stmt.Null)  stmt1.gen(b, a);
+        if(stmt2 == Stmt.Null){
+            stmt1.gen(b, a);
+        }
         else {
             int label = newlabel();
             stmt1.gen(b, label);
@@ -27,13 +28,9 @@ public class Seq extends Stmt {
                 ",\n"+
                 stmt2.AST_str(col + 1);
 
-        return "\t".repeat(Math.max(0, col)) +
-                "Seq(" +
-                '\n' +
-                AST_child +
-                '\n' +
-                "\t".repeat(Math.max(0, col)) +
-                ')';
+        return "\t".repeat(Math.max(0, col)) + "Seq(" + '\n' +
+                AST_child + '\n' +
+                "\t".repeat(Math.max(0, col)) + ')';
     }
 
 }

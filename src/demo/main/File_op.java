@@ -12,6 +12,8 @@ public class File_op {
         chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
         //禁止多选
         chooser.setMultiSelectionEnabled(false);
+        //默认目录
+        chooser.setCurrentDirectory(new File(System.getProperty("user.dir")));
         //已确认的状态
         if (chooser.showOpenDialog(button) ==JFileChooser.APPROVE_OPTION){
             File openFile = chooser.getSelectedFile();

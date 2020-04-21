@@ -25,6 +25,11 @@ public class Constant extends Expr {
             emit("goto L" + f);
         }
     }
+
+    public String toString(){
+        return op.toString();
+    }
+
     public String AST_str(int col){
         return "\t".repeat(Math.max(0, col)) +
                 "Constant(" + op.toString() + ',' + type.toString()+ ')';

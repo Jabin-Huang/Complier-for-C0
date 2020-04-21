@@ -27,7 +27,6 @@ public class If extends Stmt {
     }
 
     public String AST_str(int col){
-        int newCol = col + 1;
         String AST_child = expr.AST_str(col + 1) +
                             ",\n"+
                             stmt.AST_str(col + 1);

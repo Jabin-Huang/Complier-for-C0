@@ -1,14 +1,15 @@
 package demo.lexer;
 
+import demo.inter.expr.Temp;
 import demo.symbols.Type;
 
 import java.io.*;
 import java.util.Hashtable;
 
 public class Lexer {
-    public static int line = 1 ;
+    public static int line;
     private char peek = ' ';
-    private Hashtable<String, Word> words = new Hashtable<>();
+    private Hashtable words = new Hashtable();
     private InputStream in;
 
     private void reserve(Word t){
@@ -17,6 +18,7 @@ public class Lexer {
 
     public Lexer(InputStream input){
         line = 1;
+        Temp.count = 0;
         in = input;
         reserve(new Word("true", Tag.TRUE));
         reserve(new Word("false", Tag.FALSE));
@@ -25,10 +27,12 @@ public class Lexer {
         reserve(new Word("break",Tag.BREAK));
         reserve(new Word("while",Tag.WHILE));
         reserve(new Word("do",Tag.DO));
+        reserve(new Word("return", Tag.RETURN));
         reserve(Type.Char);
         reserve(Type.Int);
         reserve(Type.Bool);
         reserve(Type.Float);
+        reserve(Type.Void);
         Tag.init();
     }
 
@@ -74,7 +78,7 @@ public class Lexer {
             else if(peek == '\n') line = line + 1;
             else break;
         }
-        //multi-character op
+        //多字符运算符
         switch (peek){
             case '&':
                 if(readch('&')) return Word.and; else return new Token('&');
@@ -90,7 +94,7 @@ public class Lexer {
                 if(readch('=')) return Word.ge; else return new Token('>');
         }
 
-        //num (include real)
+        //数字
         if(Character.isDigit(peek) ){
             int v = 0;
             do{
@@ -107,6 +111,7 @@ public class Lexer {
             }
             return new Real(x);
         }
+        //字母开头的关键字
         if(Character.isLetter(peek)){
             StringBuffer b = new StringBuffer();
             do{
@@ -114,15 +119,15 @@ public class Lexer {
                 readch();
             } while(Character.isLetterOrDigit(peek));
             String s = b.toString();
-            //check if s is of reserved words.
-            Word w = (Word)words.get(s);
+            //查看是否已是关键字
+            Token w = (Token) words.get(s);
             if(w != null) return w;
-            //now s is an ID.
+
             w =new Word(s, Tag.ID);
             words.put(s, w);
             return w;
         }
-        //single character
+        //其他单字符
         Token t= new Token(peek);
         peek = ' ';
         return t;

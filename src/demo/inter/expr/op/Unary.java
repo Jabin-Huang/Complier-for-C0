@@ -12,11 +12,11 @@ public class Unary extends Op {
         type = Type.max(Type.Int, expr.type);
         if(type == null) error("type error");
     }
-    public Expr gen(){
-        return new Unary(op, expr.reduce());
-    }
+//    public Expr gen(){
+//        return new Unary(op, expr.reduce());
+//    }
     public String toString(){
-        return op.toString() + " " + expr.toString();
+        return op.toString() + " " + expr.reduce().toString();
     }
     public String AST_str(int col){
         String AST_child = "\t".repeat(Math.max(0, col + 1)) +

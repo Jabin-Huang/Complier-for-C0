@@ -11,7 +11,7 @@ public class Not extends Logical {
         expr2.jumping(f, t);
     }
     public String toString(){
-        return op.toString() + " " +expr2.toString();
+        return op.toString() + " " +expr2.reduce().toString();
     }
     public String AST_str(int col){
         String AST_child = "\t".repeat(Math.max(0,col + 1)) +

@@ -1,24 +1,23 @@
 package demo.symbols;
 
+import demo.inter.expr.Function;
 import demo.inter.expr.Id;
-import demo.lexer.Token;
+import demo.lexer.Word;
 
 import java.util.Hashtable;
 import java.util.Stack;
 
 public class Env {
-    private Hashtable table;
+    private Hashtable<Word, Id> idTable;
+    private static Hashtable<Word, Function> funcTable = new Hashtable<Word, Function>();
     private Env prev;
-
+    public int used = 0 ;
     public static Env top = null;
     private static Stack<Env> S = new Stack<>();
     public Env(Env p){
-        table = new Hashtable();
+        idTable = new Hashtable<Word, Id>();
         prev = p;
-    }
-
-    public void put(Token w, Id i){
-        table.put(w, i);
+        used = 0;
     }
 
     public static void push(Env e){
@@ -26,16 +25,30 @@ public class Env {
     }
 
     public static Env pop(){
-         return S.pop();
+        return S.pop();
     }
 
-    public Id get(Token w){
+    public void putId(Word w, Id i){
+        idTable.put(w, i);
+    }
+
+    public static void putFunc(Word w, Function i){
+        funcTable.put(w, i);
+    }
+
+    public Id getId(Word w){
         for(Env e = this; e != null; e = e.prev){
-            Id found = (Id)(e.table.get(w));
+            Id found = (Id)(e.idTable.get(w));
             if(found != null) return found;
         }
         return null;
     }
 
+
+    public static Function getFunc(Word w){
+        Function found = funcTable.get(w);
+        if(found != null) return found;
+        else return null;
+    }
 
 }

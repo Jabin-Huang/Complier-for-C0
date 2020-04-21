@@ -11,9 +11,9 @@ public class Op extends Expr {
     }
     //生成临时变量temp，并返回作为运算分量
     public Expr reduce(){
-        Expr x = gen();
+       // Expr x = gen();
         Temp t = new Temp(type);
-        emit(t.toString() + " = " + x.toString());
+        emit(t.toString() + " = " + this.toString());
         return  t;
     }
 

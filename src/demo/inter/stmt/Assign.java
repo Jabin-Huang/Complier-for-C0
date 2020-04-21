@@ -22,7 +22,7 @@ public class Assign extends Stmt {
     }
 
     public void gen(int b, int a){
-        emit(id.toString() + " = "+ expr.gen().toString());
+        emit(id.toString() + " = "+ expr.toString());
     }
 
     public String AST_str(int col){

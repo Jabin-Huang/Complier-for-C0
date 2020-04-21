@@ -1,4 +1,4 @@
-{
+void  func( ){
     int i, j;
     float val, temp, a[100];
     while(true){
@@ -11,4 +11,13 @@
         a[i] = a[j];
         a[j] = temp;
     }
+}
+
+int a(int b,  float c){
+     return b + c;
+}
+
+int main(){
+   func( );
+   return  1 + a(2, 3.0);
 }

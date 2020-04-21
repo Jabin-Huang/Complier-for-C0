@@ -1,27 +1,23 @@
 package demo.parser;
 
-import com.google.gson.Gson;
-import demo.inter.expr.Constant;
-import demo.inter.expr.Expr;
-import demo.inter.expr.Id;
-import demo.inter.expr.logical.And;
-import demo.inter.expr.logical.Not;
-import demo.inter.expr.logical.Or;
-import demo.inter.expr.logical.Rel;
-import demo.inter.expr.op.Access;
-import demo.inter.expr.op.Arith;
-import demo.inter.expr.op.Unary;
+import demo.inter.Node;
+
+import demo.inter.expr.logical.*;
+import demo.inter.expr.op.*;
+import demo.inter.expr.*;
 import demo.inter.stmt.*;
 import demo.lexer.*;
 import demo.symbols.*;
 
 import java.io.IOException;
+import java.util.Stack;
+import java.util.Vector;
 
 
 public class Parser {
     private Lexer lex;
     private Token look; //向前看词法单元
-    private int used = 0; //用于变量声明的存储位置
+    private Type savedProcType; //用于return的类型检查
     public Parser(Lexer l) throws IOException {
         lex = l;
         move();
@@ -36,45 +32,58 @@ public class Parser {
         if(look.tag == t) move();
         else {
             String expect = (t > 255) ? Tag.tagToString.get(t) : ""+(char) t;
-            error("syntax error: expected "+ expect +"but found " + look.toString() );
+            error("syntax error: expected \""+ expect +"\", but found \"" + look.toString() +"\"" );
         }
     }
 
 
     //program -> process program | e
     public void progarm() throws IOException {
+        //顶层符号表
         Env.top = new Env(Env.top);
-       // while (look.tag == Tag.BASIC){
+        do{
             process();
-       // }
+        }while(look.tag == Tag.BASIC);
     }
 
     //process -> type id (parameter) block
     private void process() throws IOException{
-//        Type fun_t = (Type) look;
-//        match(Tag.BASIC);
-//        Word fun_w = (Word) look;
-//        match(Tag.ID);
-//        /*
-//            TODO
-//         */
-//        match('(');
-//        // parameter -> type id ids | e
-//        // ids -> , type id ids | e
-//        do{
-//            if(look.tag == ',') match(',');
-//            Type pt_word = (Type) look;
-//            match(Tag.BASIC);
-//            Word id_word = (Word) look;
-//            match(Tag.ID);
-//            /*
-//                TODO
-//             */
-//        }while(look.tag == ',');
-//        match(')');
+        Token fun_t = look;
+        match(Tag.BASIC);
+        Token fun_w = look;
+        match(Tag.ID);
+        match('(');
 
-        Stmt s = block();
-        System.out.print(s.AST_str(0));
+        Vector<Type> param = new Vector<>();
+        //函数名在顶层符号表， 形参在相应块所属的符号表
+        Env.push(Env.top);
+        Env.top = new Env(Env.top);
+        Env next = Env.top;
+        // parameter -> type id ids | e
+        // ids -> , type id ids | e
+        while(look.tag == Tag.BASIC){
+
+            Token param_t = look;
+            match(Tag.BASIC);
+            param.add((Type) param_t);
+
+            Token id_word = look;
+            match(Tag.ID);
+            if(look.tag == ',') match(',');
+
+            Id id= new Id((Word) id_word, (Type) param_t, Env.top.used);
+            Env.top.putId((Word) id_word, id);
+            Env.top.used = Env.top.used + ((Type) param_t).width;
+        }
+        match(')');
+        Env.top = Env.pop();
+        Function func =  new Function((Word) fun_w, (Type) fun_t, param);
+        Env.putFunc((Word) fun_w, func);
+        savedProcType = (Type) fun_t; //用于return类型检查
+
+        Stmt s = block(next);
+        System.out.println(s.AST_str(0));
+
         int begin = s.newlabel();
         int after = s.newlabel();
         s.emitlabel(begin);
@@ -85,10 +94,12 @@ public class Parser {
 
 
     //block -> {decls stmts}
-    private Stmt block() throws IOException{
+    private Stmt block(Env e) throws IOException{
         match('{');
         Env.push(Env.top);
-        Env.top = new Env(Env.top);
+        //若是函数块的开头，则将形参信息传过来
+        if(e != null) Env.top = e;
+        else Env.top = new Env(Env.top);
         decls();
         Stmt s = stmts();
         match('}');
@@ -113,9 +124,12 @@ public class Parser {
                     p = dims(basic_t);
                 }
                 //加入符号表
-                Id id = new Id(id_word, p, used);
-                Env.top.put(id_word, id);
-                used = used + p.width;
+                if(Env.top.getId(id_word) != null){
+                    error(id_word.toString() + " has been declared");
+                }
+                Id id = new Id(id_word, p, Env.top.used);
+                Env.top.putId(id_word, id);
+                Env.top.used = Env.top.used + p.width;
             } while(look.tag == ',');
             match(';');
         }
@@ -143,76 +157,126 @@ public class Parser {
     }
 
     private Stmt stmt() throws IOException{
-        Expr x;
-        Stmt s, s1, s2;
-        Stmt savedStmt; //为break保存外层循环
         switch (look.tag){
             case ';':
                 move();
                 return Stmt.Null;
             case Tag.IF:
-                //stmt -> if (bool) stmt
-                match(Tag.IF);
-                match('(');
-                x = bool();
-                match(')');
-                s1 = stmt();
-                if(look.tag != Tag.ELSE){
-                    return new If(x, s1);
-                }
-                //stmt -> if (bool) stmt else stmt
-                match(Tag.ELSE);
-                s2 = stmt();
-                return new If_else(x, s1, s2);
+                return If();
             case Tag.WHILE:
-                //stmt -> while (bool) stmt
-                While whilenode = new While();
-                savedStmt = Stmt.Enclosing;
-                Stmt.Enclosing = whilenode;
-                match(Tag.WHILE);
-                match('(');
-                x = bool();
-                match(')');
-                s1 = stmt();
-                whilenode.init(x, s1);
-                Stmt.Enclosing = savedStmt;
-                return whilenode;
+                return While();
             case Tag.DO:
-                //stmt -> do stmt while(bool);
-                Do_while donode = new Do_while();
-                savedStmt = Stmt.Enclosing;
-                Stmt.Enclosing = donode;
-                match(Tag.DO);
-                s1 = stmt();
-                match(Tag.WHILE);
-                match('(');
-                x = bool();
-                match(')');
-                match(';');
-                donode.init(s1, x);
-                Stmt.Enclosing = savedStmt;
-                return donode;
+               return Do_while();
             case Tag.BREAK:
-                // stmt -> break;
-                match(Tag.BREAK);
-                match(';');
-                return new Break();
+               return Break();
+            case Tag.RETURN:
+                return Return();
             case '{':
-                // stmt -> block
-                return block();
+                return block(null);
             default:
+                Token id_word = look;
+                match(Tag.ID);
+                //stmt -> id(exprList)
+                if(look.tag == '('){
+                    return (Stmt) Call((Word) id_word, 0);
+                }
                 // stmt -> loc = bool
-                return assign();
+                else return assign((Word) id_word);
         }
-
     }
 
+    private Stmt Return() throws IOException {
+        match(Tag.RETURN);
+        Expr x = bool();
+        match(';');
+        return new Return(x, savedProcType);
+    }
+
+    //stmt -> id(exprList);
+    private Node Call(Word id_word, int kind) throws IOException{
+        Function func = Env.getFunc(id_word);
+        if(func == null){
+            error(id_word.toString() + "() undecleard");
+        }
+        match('(');
+        Vector<Expr> parameters = new Vector<>();
+        do{
+            if(look.tag == ')') break;
+            if(look.tag == ',') match(',');
+            parameters.add(bool());
+        }while(look.tag == ',');
+        match(')');
+        if(kind == 0){
+            match(';');
+            return new Call(func, parameters);
+        }
+        else {
+            return new Call_ret(func, parameters);
+        }
+    }
+
+    private Stmt If() throws IOException {
+        //stmt -> if (bool) stmt
+        match(Tag.IF);
+        match('(');
+        Expr x = bool();
+        match(')');
+        Stmt s1 = stmt();
+        if(look.tag != Tag.ELSE){
+            return new If(x, s1);
+        }
+        //stmt -> if (bool) stmt else stmt
+        match(Tag.ELSE);
+        Stmt s2 = stmt();
+        return new If_else(x, s1, s2);
+    }
+
+    //stmt -> while (bool) stmt
+    private Stmt While() throws IOException{
+        While whilenode = new While();
+        Stmt savedStmt = Stmt.Enclosing;
+        //提前构造while结点，以用于stmt内部的break找到外层循环
+        Stmt.Enclosing = whilenode;
+        match(Tag.WHILE);
+        match('(');
+        Expr x = bool();
+        match(')');
+        Stmt s1 = stmt();
+        whilenode.init(x, s1);
+        Stmt.Enclosing = savedStmt;
+        return whilenode;
+    }
+
+    //stmt -> do stmt while(bool);
+    private Stmt Do_while() throws IOException{
+        Do_while donode = new Do_while();
+        Stmt savedStmt = Stmt.Enclosing;
+        //提前构造while结点，以用于stmt内部的break找到外层循环
+        Stmt.Enclosing = donode;
+        match(Tag.DO);
+        Stmt s1 = stmt();
+        match(Tag.WHILE);
+        match('(');
+        Expr x = bool();
+        match(')');
+        match(';');
+        donode.init(s1, x);
+        Stmt.Enclosing = savedStmt;
+        return donode;
+    }
+
+    // stmt -> break;
+    private Stmt Break() throws IOException{
+        match(Tag.BREAK);
+        match(';');
+        return new Break();
+    }
+
+
     //stmt ->  loc = bool;
-    private Stmt assign() throws IOException{
+    private Stmt assign(Word id_word) throws IOException{
         Stmt stmt;
-        Word id_word = (Word) look;
-        match(Tag.ID);
-        Id id = Env.top.get(id_word);
+        Id id = Env.top.getId(id_word);
         if(id == null) error(id_word.toString() + " undeclared");
 
         //loc -> id
@@ -319,7 +383,7 @@ public class Parser {
         while(look.tag == '*' || look.tag == '/'){
             Token tok = look;
             move();
-            x = new Arith(tok, x, unary());
+            x = new Arith(tok, x, term());
         }
         return x;
     }
@@ -375,18 +439,31 @@ public class Parser {
                 move();
                 return x;
             case Tag.ID:
-                Id id = Env.top.get(look);
-                if(id == null){
-                    error(look.toString() + " undeclared");
-                }
+                Word id_word = (Word) look;
                 move();
-                if(look.tag != '[') return id;
-                else return offset(id);
+                if(look.tag == '['){
+                    Id id = Env.top.getId((Word) id_word);
+                    if(id == null){
+                        error(id_word.toString() + " undeclared");
+                    }
+                    return offset(id);
+                }
+                else if(look.tag == '(') {
+                    return  (Expr) Call(id_word, 1);
+                }
+                else {
+                    Id id = Env.top.getId((Word) id_word);
+                    if(id == null){
+                        error(id_word.toString() + " undeclared");
+                    }
+                    return id;
+                }
             default:
                 error("syntax error");
                 return x;
         }
     }
+
 
     private Access offset(Id a) throws IOException{
         Expr i, w, t1, t2, loc;

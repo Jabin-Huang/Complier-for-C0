@@ -23,7 +23,8 @@ public class Tag {
             OR    = 272,
             INDEX = 273,
             BREAK = 274,
-            TEMP = 275;
+            TEMP = 275,
+            RETURN = 276;
 
     public static Hashtable<Integer, String> tagToString = new Hashtable<>();
     static void init(){

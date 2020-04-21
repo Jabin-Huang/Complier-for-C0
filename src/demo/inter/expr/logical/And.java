@@ -8,15 +8,16 @@ public class And extends Logical {
         super(tok, x1, x2);
     }
 
-    /* //f == 0
+    /* //f == 0, t != 0
               ifFalse expr1 goto label
               if expr2 goto t
         label:
 
-        //f != 0
+        //f != 0, t != 0
               ifFalse expr goto f
               if expr2 goto t
               goto f
+
      */
     public void jumping(int t, int f){
         int label = f != 0 ? f : newlabel();

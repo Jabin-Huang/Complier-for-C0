@@ -33,7 +33,7 @@ public class Logical extends Expr {
         a:
         ...
      */
-    public Expr gen(){
+    public Expr reduce(){
         int f = newlabel();
         int a = newlabel();
         Temp temp =new Temp(type);
@@ -47,6 +47,6 @@ public class Logical extends Expr {
     }
 
     public String toString(){
-        return expr1.toString() + " " + op.toString() + " " +expr2.toString();
+        return expr1.reduce().toString() + " " + op.toString() + " " +expr2.reduce().toString();
     }
 }

@@ -20,6 +20,11 @@ public class Rel extends Logical {
         else return null;
     }
 
+    public void jumping(int t, int f){
+        String test = expr1.reduce().toString() + " " + op.toString() + " " +expr2.reduce().toString();
+        emitjumps(test, t, f);
+    }
+
     public String AST_str(int col){
         String AST_child = "\t".repeat(Math.max(0,col + 1)) +
                 op.toString() +

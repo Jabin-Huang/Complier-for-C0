@@ -1,8 +1,8 @@
 package demo.inter.stmt;
 
 import demo.inter.expr.Expr;
-import demo.inter.expr.op.Access;
 import demo.inter.expr.Id;
+import demo.inter.expr.op.Access;
 import demo.symbols.Array;
 import demo.symbols.Type;
 

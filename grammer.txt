@@ -16,14 +16,19 @@
 
     stmts -> stmt stmts　|e
     stmt ->  loc = bool;
+           | id(exprList);
            | if (bool) stmt
            | if (bool) stmt else stmt
            | while (bool) stmt
            | do stmt while(bool);
            | break;
            | block
+
+
     loc -> id | id offset
     offset -> [NUM] offset | e
+    exprList -> bool, exprlist
+              | bool | e
 
     bool -> join || bool
           | join
@@ -46,7 +51,9 @@
     unary -> !unary
            | -unary
            | factor
-    factor -> (bool)
+
+    factor ->id(exprList)
+             | (bool)
              | loc
              | NUM
              | REAL

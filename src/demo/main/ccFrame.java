@@ -1,6 +1,8 @@
 package demo.main;
 
 import javax.swing.*;
+import javax.swing.border.TitledBorder;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.*;
@@ -15,13 +17,12 @@ public class ccFrame {
 
     public ccFrame() {
         openPathField.setEditable(false);
-
         executeButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 Run run = new Run(inArea.getText());
                 try {
-                    outArea.append(run.work());
+                    outArea.setText(run.work());
                 } catch (IOException ex) {
                     ex.printStackTrace();
                 }
@@ -33,7 +34,7 @@ public class ccFrame {
             public void actionPerformed(ActionEvent e) {
                 try {
                     String filePath = File_op.open(openButton);
-                    if(filePath != null){
+                    if (filePath != null) {
                         openPathField.setText(filePath);
                         inArea.setText(File_op.fileToString(filePath));
                     }
