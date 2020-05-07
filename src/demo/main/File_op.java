@@ -15,16 +15,15 @@ public class File_op {
         //默认目录
         chooser.setCurrentDirectory(new File(System.getProperty("user.dir")));
         //已确认的状态
-        if (chooser.showOpenDialog(button) ==JFileChooser.APPROVE_OPTION){
+        if (chooser.showOpenDialog(button) == JFileChooser.APPROVE_OPTION) {
             File openFile = chooser.getSelectedFile();
             return openFile.getPath();
-        }
-        else return null;
+        } else return null;
     }
 
 
-    public static void save(JButton button){
-         //TODO
+    public static void save(JButton button) {
+        //TODO
     }
 
     //文件内容转String
@@ -34,7 +33,7 @@ public class File_op {
         String line;
         StringBuffer buffer = new StringBuffer();
         line = reader.readLine();
-        while(line != null){
+        while (line != null) {
             buffer.append(line);
             buffer.append("\n");
             line = reader.readLine();
