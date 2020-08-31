@@ -1,11 +1,13 @@
 /*
     //e表示空字
+    //函数（块）定义
     program -> process program | e
     process -> type id(parameter) block
     parameter -> type id ids | e
     ids -> , type id ids | e
     block -> {decls stmts}
 
+    //变量、数组定义
     decls -> decl decls | e　
     decl -> type ID IDs ;
     type -> BASIC
@@ -13,25 +15,24 @@
     ID -> id | id dims
     dims -> [NUM] dims | e
 
-
+    //语句序列
     stmts -> stmt stmts　|e
-    stmt ->  loc = bool;
+    stmt ->  loc = exprEntry;
            | id(exprList);
-           | if (bool) stmt
-           | if (bool) stmt else stmt
-           | while (bool) stmt
-           | do stmt while(bool);
+           | if (exprEntry) stmt
+           | if (exprEntry) stmt else stmt
+           | while (exprEntry) stmt
+           | do stmt while(exprEntry);
            | break;
            | block
 
-
+    //左值
     loc -> id | id offset
     offset -> [NUM] offset | e
-    exprList -> bool, exprlist
-              | bool | e
 
-    bool -> join || bool
-          | join
+    //表达式（右值）
+    exprEntry -> join || exprEntry
+                | join
     join -> equality && join
           | equality
     equality ->  rel == equality
@@ -51,12 +52,16 @@
     unary -> !unary
            | -unary
            | factor
-
     factor ->id(exprList)
-             | (bool)
+             | (exprEntry)
              | loc
              | NUM
              | REAL
              | TRUE
              | FALSE
+
+    //调用函数时的参数列表
+    exprList -> exprEntry, exprlist
+               | exprEntry
+               | e
  */
